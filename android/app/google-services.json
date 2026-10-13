@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "156761198319",
+    "project_id": "imaxmoviebookingapp",
+    "storage_bucket": "imaxmoviebookingapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:156761198319:android:ac9ec69e61aab4618cd51a",
+        "android_client_info": {
+          "package_name": "com.example.imax_movie_ticket_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGCFvg2O_Ku46426JBV0Mnu3hlwnKYM1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

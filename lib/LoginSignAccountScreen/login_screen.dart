@@ -139,8 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
             checkBox: isSelected
-                ? Icons.check_box_outline_blank_outlined
-                : Icons.check_box,
+                ? Icons.check_box
+                : Icons.check_box_outline_blank_outlined,
             onCheckTap: () {
               setState(() {
                 isSelected = !isSelected;

@@ -4,6 +4,7 @@ import 'package:imax_movie_ticket_booking/BoxOfficeScreens/box_office_booking_sc
 import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'package:imax_movie_ticket_booking/SuperAdminScreens/super_admin_dashboard_screen.dart';
 import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'create_account.dart';
 import '../PublicScreens/dashboard_screen.dart';
 import 'package:imax_movie_ticket_booking/Widgets/singup_singin_screen.dart';
@@ -60,6 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       if (user != null) {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isFirstTime', false);
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userEmail', email);
+
         final bool isSuperAdmin =
             email.endsWith('@superadmin.com') ||
             (user.email?.toLowerCase().endsWith('@superadmin.com') ?? false);
@@ -71,31 +77,43 @@ class _LoginScreenState extends State<LoginScreen> {
             (user.email?.toLowerCase().endsWith('@boxoffice.com') ?? false);
 
         if (isSuperAdmin) {
+          await prefs.setString('userRole', 'super_admin');
           AppToast.showSuccess('Welcome Super Admin!');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const SuperAdminDashboardScreen(),
-            ),
-          );
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SuperAdminDashboardScreen(),
+              ),
+            );
+          }
         } else if (isAdmin) {
+          await prefs.setString('userRole', 'admin');
           AppToast.showSuccess('Welcome Cinema Admin!');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-          );
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+            );
+          }
         } else if (isBoxOffice) {
+          await prefs.setString('userRole', 'box_office');
           AppToast.showSuccess('Welcome Box Office Counter!');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const BoxOfficeBookingScreen()),
-          );
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const BoxOfficeBookingScreen()),
+            );
+          }
         } else {
+          await prefs.setString('userRole', 'customer');
           AppToast.showSuccess('Logged in successfully!');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            );
+          }
         }
       }
     } catch (e) {

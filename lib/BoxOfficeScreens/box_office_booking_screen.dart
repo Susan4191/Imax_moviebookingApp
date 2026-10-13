@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
 import 'package:imax_movie_ticket_booking/Model/booking_model.dart';
 import 'package:imax_movie_ticket_booking/Model/movie_model.dart';
 import 'package:imax_movie_ticket_booking/Model/seat_model.dart';
@@ -8,6 +9,7 @@ import 'package:imax_movie_ticket_booking/Provider/movie_provider.dart';
 import 'package:imax_movie_ticket_booking/Provider/seat_proviede.dart';
 import 'package:imax_movie_ticket_booking/Provider/show_time_provider.dart';
 import 'package:imax_movie_ticket_booking/PublicScreens/ticket_detail_screen.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'package:imax_movie_ticket_booking/Widgets/seat_item_widget.dart';
 import 'package:imax_movie_ticket_booking/Widgets/seat_legend_widget.dart';
 import 'package:imax_movie_ticket_booking/utils/app_color.dart';
@@ -92,7 +94,7 @@ class _BoxOfficeBookingScreenState extends State<BoxOfficeBookingScreen> {
         centerTitle: false,
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: AppColor.green.withValues(alpha: 0.2),
@@ -116,6 +118,70 @@ class _BoxOfficeBookingScreenState extends State<BoxOfficeBookingScreen> {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColor.red),
+            tooltip: 'Logout',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: AppColor.cardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Text(
+                    'Logout Box Office',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColor.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to log out?',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColor.textSecondary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        'Cancel',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColor.grey,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await FirebaseAuthService().signOut();
+                        AppToast.showInfo('Logged out of Box Office counter');
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColor.themeColor,
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColor.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_screen.dart';
 import '../LoginSignAccountScreen/login_screen.dart';
 import 'package:imax_movie_ticket_booking/Widgets/gesture_getector_button.dart';
@@ -138,13 +139,18 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
                         ///Navigate to homescreen
                         GestureDetectorButton(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DashboardScreen(),
-                              ),
-                            );
+                          onTap: () async {
+                            final SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            await prefs.setBool('isFirstTime', false);
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const DashboardScreen(),
+                                ),
+                              );
+                            }
                           },
                           gestureText: "Explore Movies",
                         ),
@@ -162,13 +168,18 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                             ),
 
                             GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => LoginScreen(),
-                                  ),
-                                );
+                              onTap: () async {
+                                final SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.setBool('isFirstTime', false);
+                                if (context.mounted) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginScreen(),
+                                    ),
+                                  );
+                                }
                               },
                               child: Text(
                                 "LogIn",

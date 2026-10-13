@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 
 import '../Widgets/custom_text_field.dart';
 import '../utils/app_color.dart';
@@ -18,6 +19,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  void _loadUserProfile() {
+    final user = FirebaseAuthService().currentUser;
+    if (user != null) {
+      nameController.text = user.displayName ?? '';
+      emailController.text = user.email ?? '';
+      phoneController.text = user.phoneNumber ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +75,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: AppColor.themeColor.withValues(alpha: 0.2),
                       border: Border.all(color: AppColor.themeColor, width: 2),
                     ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      color: AppColor.themeColor,
-                      size: 56,
+                    child: Center(
+                      child: Text(
+                        nameController.text.trim().isNotEmpty
+                            ? nameController.text.trim()[0].toUpperCase()
+                            : 'U',
+                        style: AppTextStyles.headingMedium.copyWith(
+                          color: AppColor.themeColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 36,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -143,10 +174,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (formKey.currentState?.validate() == true) {
+                        final user = FirebaseAuthService().currentUser;
+                        if (user != null) {
+                          await user.updateDisplayName(
+                            nameController.text.trim(),
+                          );
+                          await user.reload();
+                        }
                         AppToast.showSuccess('Profile updated successfully!');
-                        Navigator.pop(context);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
                       } else {
                         AppToast.showError('Please fill required fields');
                       }

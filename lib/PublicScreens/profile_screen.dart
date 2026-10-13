@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'edit_profile_screen.dart';
 import 'package:imax_movie_ticket_booking/utils/app_color.dart';
 
@@ -56,7 +59,51 @@ The application makes cinema ticket booking simple, fast and convenient.
 
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
+  void initState() {
+    super.initState();
+    _reloadUser();
+  }
+
+  Future<void> _reloadUser() async {
+    final user = FirebaseAuthService().currentUser;
+    if (user != null) {
+      try {
+        await user.reload();
+      } catch (_) {}
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  String _getFormattedUserName(User? user) {
+    if (user == null) return 'Guest User';
+
+    if (user.displayName != null && user.displayName!.trim().isNotEmpty) {
+      return user.displayName!.trim();
+    }
+
+    if (user.email != null && user.email!.trim().isNotEmpty) {
+      final String prefix = user.email!.split('@').first;
+      final words = prefix.replaceAll(RegExp(r'[_.-]'), ' ').split(' ');
+      final formatted = words
+          .where((w) => w.isNotEmpty)
+          .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+          .join(' ');
+      if (formatted.isNotEmpty) {
+        return formatted;
+      }
+    }
+
+    return 'Guest User';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuthService().currentUser;
+    final String displayName = _getFormattedUserName(user);
+    final String email = user?.email ?? 'Not Logged In';
+
     return Scaffold(
       appBar: const CustomAppBar(),
       backgroundColor: AppColor.backgroundColor,
@@ -87,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Row(
                   children: [
-                    /// Generic Avatar Icon
+                    /// User Avatar Circle
                     Container(
                       width: 65,
                       height: 65,
@@ -99,10 +146,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 2,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: AppColor.themeColor,
-                        size: 36,
+                      child: Center(
+                        child: Text(
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
+                              : 'U',
+                          style: AppTextStyles.headingMedium.copyWith(
+                            color: AppColor.themeColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -113,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "User Profile",
+                            displayName,
                             style: AppTextStyles.titleMedium.copyWith(
                               color: AppColor.white,
                               fontWeight: FontWeight.bold,
@@ -121,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Connect account or complete profile',
+                            email,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColor.grey,
                             ),
@@ -139,14 +192,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.person_outline,
                 title: 'Personal Information',
                 subtitle: 'Name, email and phone number',
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const EditProfileScreen(),
                     ),
                   );
-                  setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                  }
                 },
               ),
               const SizedBox(height: 10),
@@ -158,10 +213,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 subtitle: 'Read our terms and policies',
                 onTap: () {
                   showDialog(
-                    context: (context),
-                    builder: (_) => TermsAndConditionsDialog(),
+                    context: context,
+                    builder: (_) => const TermsAndConditionsDialog(),
                   );
-                  setState(() {});
                 },
               ),
               const SizedBox(height: 10),
@@ -193,8 +247,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileCard(
                 icon: Icons.logout,
                 title: 'Logout',
-                onTap: () {
-                  AppToast.showInfo('Logged out successfully');
+                onTap: () async {
+                  showDialog(
+                    context: context,
+                    builder: (dialogCtx) => AlertDialog(
+                      backgroundColor: AppColor.cardColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(
+                        'Logout',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColor.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to log out of your account?',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColor.textSecondary,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogCtx),
+                          child: Text(
+                            'Cancel',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColor.grey,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogCtx);
+                            await FirebaseAuthService().signOut();
+                            AppToast.showInfo('Logged out successfully');
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.themeColor,
+                          ),
+                          child: Text(
+                            'Logout',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColor.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 10),
@@ -208,7 +319,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 titleColor: AppColor.red,
                 borderColor: AppColor.red,
                 onTap: () {
-                  AppToast.showError('Account deletion request submitted');
+                  showDialog(
+                    context: context,
+                    builder: (dialogCtx) => AlertDialog(
+                      backgroundColor: AppColor.cardColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(
+                        'Delete Account',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColor.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to permanently delete your account? This action cannot be undone.',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColor.textSecondary,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogCtx),
+                          child: Text(
+                            'Cancel',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColor.grey,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogCtx);
+                            try {
+                              final currentUser =
+                                  FirebaseAuthService().currentUser;
+                              if (currentUser != null) {
+                                await currentUser.delete();
+                              }
+                            } catch (_) {}
+                            await FirebaseAuthService().signOut();
+                            AppToast.showSuccess(
+                              'Account deleted successfully',
+                            );
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.red,
+                          ),
+                          child: Text(
+                            'Delete',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColor.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ],

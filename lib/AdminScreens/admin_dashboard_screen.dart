@@ -5,6 +5,7 @@ import 'package:imax_movie_ticket_booking/Provider/admin_provider.dart';
 import 'package:imax_movie_ticket_booking/Provider/movie_provider.dart';
 import 'package:imax_movie_ticket_booking/PublicScreens/dashboard_screen.dart';
 import 'package:imax_movie_ticket_booking/PublicScreens/ticket_detail_screen.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'package:imax_movie_ticket_booking/utils/app_color.dart';
 import 'package:imax_movie_ticket_booking/utils/app_text_style.dart';
 import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
@@ -355,15 +356,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
               context.read<AdminProvider>().logoutAdmin();
+              await FirebaseAuthService().signOut();
               AppToast.showInfo('Logged out of Admin Panel');
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.themeColor,

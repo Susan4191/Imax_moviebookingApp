@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:imax_movie_ticket_booking/firebase_options.dart';
 import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseAuthService {
   Future<FirebaseAuth?> _getAuthInstance() async {
@@ -140,13 +141,17 @@ class FirebaseAuthService {
     }
   }
 
-  /// Sign out current user from Firebase
+  /// Sign out current user from Firebase & Local Storage
   Future<void> signOut() async {
     try {
       if (Firebase.apps.isNotEmpty) {
         await FirebaseAuth.instance.signOut();
-        AppToast.showInfo('Signed out successfully');
       }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', false);
+      await prefs.remove('userRole');
+      await prefs.remove('userEmail');
+      AppToast.showInfo('Signed out successfully');
     } catch (e) {
       AppToast.showError('Error signing out: $e');
     }

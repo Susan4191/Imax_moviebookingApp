@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
 import 'package:imax_movie_ticket_booking/Provider/super_admin_provider.dart';
 import 'package:imax_movie_ticket_booking/PublicScreens/dashboard_screen.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'package:imax_movie_ticket_booking/utils/app_color.dart';
 import 'package:imax_movie_ticket_booking/utils/app_text_style.dart';
 import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
@@ -342,7 +343,7 @@ class SuperAdminSettingsScreen extends StatelessWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Terminate current Super Admin session securely',
+                        'Log out of Super Admin account',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColor.grey,
                         ),
@@ -598,7 +599,7 @@ class SuperAdminSettingsScreen extends StatelessWidget {
           ),
         ),
         content: Text(
-          'Are you sure you want to log out of the Super Admin Panel?',
+          'Are you sure you want to log out?',
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColor.textSecondary,
           ),
@@ -612,15 +613,18 @@ class SuperAdminSettingsScreen extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
               context.read<SuperAdminProvider>().logoutSuperAdmin();
+              await FirebaseAuthService().signOut();
               AppToast.showInfo('Logged out of Super Admin Panel');
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.themeColor,

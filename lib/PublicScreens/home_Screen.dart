@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
 import 'package:imax_movie_ticket_booking/Provider/movie_provider.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
 import 'package:imax_movie_ticket_booking/utils/app_color.dart';
 import 'package:imax_movie_ticket_booking/utils/app_text_style.dart';
+import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
 import 'package:provider/provider.dart';
 
 import '../Widgets/custom_app_bar.dart';
@@ -47,6 +50,22 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
+  }
+
+  void _navigateToBooking(BuildContext context, Widget targetScreen) {
+    final user = FirebaseAuthService().currentUser;
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => targetScreen),
+      );
+    } else {
+      AppToast.showInfo('Login required for booking tickets');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -132,12 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       movieRating: movieView.rating ?? "N/A",
                       movieDuration: movieView.durations ?? "N/A",
                       onTap: () {
-                        Navigator.push(
+                        _navigateToBooking(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ShowTimeScreen(movie: movieView),
-                          ),
+                          ShowTimeScreen(movie: movieView),
                         );
                       },
                     );
@@ -208,12 +224,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               movieDuration: m.durations ?? "N/A",
                               buttonText: "Book Ticket",
                               onTap: () {
-                                Navigator.push(
+                                _navigateToBooking(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ShowTimeScreen(movie: m),
-                                  ),
+                                  ShowTimeScreen(movie: m),
                                 );
                               },
                             );

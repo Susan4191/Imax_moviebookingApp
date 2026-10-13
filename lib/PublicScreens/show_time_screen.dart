@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
+import 'package:imax_movie_ticket_booking/Model/show_time_model.dart';
 import 'package:imax_movie_ticket_booking/Provider/show_time_provider.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
+import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
 import 'select seat screen.dart';
 import 'package:imax_movie_ticket_booking/Widgets/gesture_getector_button.dart';
 import 'package:imax_movie_ticket_booking/Widgets/movie_information_card.dart';
@@ -21,22 +25,43 @@ class ShowTimeScreen extends StatefulWidget {
 class _ShowTimeScreenState extends State<ShowTimeScreen> {
   int selectDateIndex = 0;
   int selectTimeIndex = 0;
+
+  void _navigateToSeats(
+    BuildContext context,
+    String date,
+    ShowTimeModel showTime,
+  ) {
+    final user = FirebaseAuthService().currentUser;
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SeatSelectionScreen(
+            movieName: widget.movie.title,
+            moviePoster: widget.movie.poster,
+            date: date,
+            time: showTime.time,
+            format: showTime.format,
+            screen: showTime.screen,
+            ticketPrice: double.tryParse(showTime.price) ?? 600,
+          ),
+        ),
+      );
+    } else {
+      AppToast.showInfo('Login required for booking tickets');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final showTimeProvider = context.watch<ShowTimeProvider>();
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
-      appBar: CustomAppBar(),
-      //AppBar(
-      //         leading: IconButton(
-      //           onPressed: () {
-      //             Navigator.pop(context);
-      //           },
-      //           icon: const Icon(Icons.arrow_back_ios_new, color: AppColor.white),
-      //         ),
-      //         backgroundColor: AppColor.backgroundColor,
-      //         title: Image.asset("assets/images/logo_logo.png", scale: 10),
-      //       ),
+      appBar: const CustomAppBar(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -51,7 +76,7 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                 rating: widget.movie.rating,
                 duration: widget.movie.durations,
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
               ///Select Date
               Text(
@@ -60,7 +85,7 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                   color: AppColor.white,
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               SizedBox(
                 height: 100,
                 child: ListView.separated(
@@ -99,14 +124,12 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                               ),
                             ),
                             const SizedBox(height: 5),
-                            //
                             Text(
                               showDate.day.toString(),
                               style: AppTextStyles.headingSmall.copyWith(
                                 color: AppColor.white,
                               ),
                             ),
-                            //
                             Text(
                               showTimeProvider.months[showDate.month - 1],
                               style: AppTextStyles.titleMedium.copyWith(
@@ -120,20 +143,20 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                       ),
                     );
                   },
-                  separatorBuilder: (context, index) => SizedBox(width: 5),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 5),
                   itemCount: showTimeProvider.showDates.length,
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
-              //
               Text(
                 "Select ShowTime",
                 style: AppTextStyles.headingMedium.copyWith(
                   color: AppColor.white,
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
 
               Expanded(
                 child: SizedBox(
@@ -249,7 +272,7 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               GestureDetectorButton(
                 onTap: () {
                   final showDate = showTimeProvider.showDates[selectDateIndex];
@@ -262,21 +285,7 @@ class _ShowTimeScreenState extends State<ShowTimeScreen> {
                   final selectedShowTime =
                       showTimeProvider.selectDateTime[selectTimeIndex];
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SeatSelectionScreen(
-                        movieName: widget.movie.title,
-                        moviePoster: widget.movie.poster,
-                        date: formattedDate,
-                        time: selectedShowTime.time,
-                        format: selectedShowTime.format,
-                        screen: selectedShowTime.screen,
-                        ticketPrice:
-                            double.tryParse(selectedShowTime.price) ?? 600,
-                      ),
-                    ),
-                  );
+                  _navigateToSeats(context, formattedDate, selectedShowTime);
                 },
                 gestureText: "Select Seat",
               ),

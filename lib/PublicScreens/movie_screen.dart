@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:imax_movie_ticket_booking/LoginSignAccountScreen/login_screen.dart';
+import 'package:imax_movie_ticket_booking/PublicScreens/show_time_screen.dart';
+import 'package:imax_movie_ticket_booking/Services/firebase_app_auth.dart';
+import 'package:imax_movie_ticket_booking/utils/app_toast.dart';
 import 'package:provider/provider.dart';
 
 import '../Provider/movie_provider.dart';
@@ -16,6 +20,22 @@ class MovieScreen extends StatefulWidget {
 
 class _MovieScreenState extends State<MovieScreen> {
   final TextEditingController searchController = TextEditingController();
+
+  void _navigateToBooking(BuildContext context, Widget targetScreen) {
+    final user = FirebaseAuthService().currentUser;
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => targetScreen),
+      );
+    } else {
+      AppToast.showInfo('Login required for booking tickets');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +173,13 @@ class _MovieScreenState extends State<MovieScreen> {
                               movieInformation: movie.information,
                               movieRating: movie.rating ?? "N/A",
                               movieDuration: movie.durations ?? "N/A",
+                              buttonText: "Book Ticket",
+                              onTap: () {
+                                _navigateToBooking(
+                                  context,
+                                  ShowTimeScreen(movie: movie),
+                                );
+                              },
                             );
                           },
                         );
